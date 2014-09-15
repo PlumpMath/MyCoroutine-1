@@ -1,0 +1,17 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Library/MonoBehaviour.cs">
+    <Files>
+      <File FileName="Assets/Library/Main.cs" Line="3" Column="3" />
+      <File FileName="Assets/Scene/Test/Test.cs" Line="19" Column="19" />
+      <File FileName="Assets/Library/MonoBehaviour.cs" Line="38" Column="38" />
+      <File FileName="Assets/Library/Coroutine.cs" Line="1" Column="1" />
+      <File FileName="Assets/Library/YieldInstruction.cs" Line="1" Column="1" />
+      <File FileName="Assets/Library/WaitForSeconds.cs" Line="1" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
