@@ -15,15 +15,12 @@ namespace OtherEngine
 
 		public Coroutine StartCoroutine(IEnumerator routine)
 		{
-			// routineを静的なリストに登録する
-			Main.AddRoutine(this, routine);
-
-			return null;
+			return StartCoroutineCommon(null, routine);
 		}
 
 		public Coroutine StartCoroutine(string methodName, object arg = null)
 		{
-			object[] param = arg == null ?
+			object[] param = (arg == null) ?
 				null :
 				new object[] { arg };
 
@@ -33,7 +30,12 @@ namespace OtherEngine
 				null, this, param
 			);
 
-			Main.AddRoutine(this, routine);
+			return StartCoroutineCommon(methodName, routine);
+		}
+
+		private Coroutine StartCoroutineCommon(string methodName, IEnumerator routine)
+		{
+			Main.AddRoutine(this, methodName, routine);
 
 			return null;
 		}

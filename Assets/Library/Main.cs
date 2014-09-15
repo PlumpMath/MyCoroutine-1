@@ -21,15 +21,6 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	public static void AddRoutine(OtherEngine.MonoBehaviour behaviour, IEnumerator routine)
-	{
-		BehaviourData bdata;
-		if (behaviourDict.TryGetValue(behaviour, out bdata))
-		{
-			bdata.routineList.AddLast(new RoutineData(null, routine));
-		}
-	}
-
 	public static void AddRoutine(OtherEngine.MonoBehaviour behaviour, string methodName, IEnumerator routine)
 	{
 		BehaviourData bdata;
