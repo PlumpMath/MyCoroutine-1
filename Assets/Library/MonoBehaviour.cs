@@ -35,6 +35,8 @@ namespace OtherEngine
 
 		private Coroutine StartCoroutineCommon(string methodName, IEnumerator routine)
 		{
+			// コルーチンの初回実行はStartCoroutineを呼び出したシーケンスで行われるので、
+			// このあたりで一回 MoveNext() を呼びたいところ。
 			Main.AddRoutine(this, methodName, routine);
 
 			return null;
