@@ -95,7 +95,6 @@ public class Main : MonoBehaviour
 					if (current == null)
 					{
 						// 何もしない
-						return;
 					}
 					//else if (current is 
 					{
