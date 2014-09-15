@@ -6,7 +6,8 @@ public class Test : MonoBehaviour
 	public override void Start()
 	{
 		//StartCoroutine(RoutineTest());
-		StartCoroutine("RoutineTest", "hoge");
+		StartCoroutine("RoutineTest", "A");
+		StartCoroutine("RoutineTest", "B");
 	}
 
 	int count;
@@ -14,17 +15,21 @@ public class Test : MonoBehaviour
 	public override void Update()
 	{
 		++count;
-		if (count == 300)
+		if (count == 50)
 		{
-			StopAllCoroutines();
+			//StopAllCoroutines();
+			StopCorutine("RoutineTest");
 		}
 	}
 
-	private IEnumerator RoutineTest(string x)
+	private IEnumerator RoutineTest(string name)
 	{
+		int x = 0;
+
 		while (true)
 		{
-			UnityEngine.Debug.Log("★ Coroutine");
+			++x;
+			UnityEngine.Debug.Log("★" + name + ", " + x);
 			yield return null;
 		}
 	}
