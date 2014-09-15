@@ -90,27 +90,35 @@ public class Main : MonoBehaviour
 				if (rdata.routine.MoveNext())
 				{
 					object current = rdata.routine.Current;
-
 					// ★ここがキモ
-					if (current == null)
-					{
-						// 何もしない
-					}
-					//else if (current is 
-					{
-						// 
-					}
-
+					ProcessYieldInstruction(current);
 					node = node.Next;
 				}
 				else
 				{
 					// 終わったコルーチンはリストから除外
-					var toRemove = node;
+					LinkedListNode<RoutineData> toRemove = node;
 					node = node.Next;
 					bdata.routineList.Remove(toRemove);
 				}
 			}
+		}
+	}
+
+	private void ProcessYieldInstruction(object instruction)
+	{
+		if (instruction == null)
+		{
+			return;
+		}
+
+		if (instruction is Coroutine)
+		{
+
+		}
+		else if (instruction is YieldInstruction)
+		{
+			//WaitForSeconds
 		}
 	}
 
