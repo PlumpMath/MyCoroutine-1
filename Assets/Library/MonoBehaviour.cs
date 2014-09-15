@@ -23,10 +23,14 @@ namespace OtherEngine
 
 		public Coroutine StartCoroutine(string methodName, object arg = null)
 		{
+			object[] param = arg == null ?
+				null :
+				new object[] { arg };
+
 			IEnumerator routine = (IEnumerator)this.GetType().InvokeMember(
 				methodName,
 				BindingFlags.InvokeMethod | BindingFlags.Instance | BindingFlags.NonPublic,
-				null, this, new object[] { arg }
+				null, this, param
 			);
 
 			Main.AddRoutine(this, routine);
