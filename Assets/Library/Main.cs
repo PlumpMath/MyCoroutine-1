@@ -5,9 +5,6 @@ using System.Threading;
 
 public class Main : MonoBehaviour
 {
-	[SerializeField]
-	private int framerate;
-
 	// キーがnullになることがある、かつ登録した順序を保持したいので型はこうなる。
 	//private static List<OtherEngine.BehaviourData> routineList = new List<OtherEngine.BehaviourData>();
 	private static Dictionary<OtherEngine.MonoBehaviour, OtherEngine.BehaviourData> behaviourDict = 
@@ -21,13 +18,16 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	public static void AddRoutine(OtherEngine.MonoBehaviour behaviour, string methodName, IEnumerator routine)
+	public static OtherEngine.Coroutine AddRoutine(OtherEngine.MonoBehaviour behaviour, string methodName, IEnumerator routine)
 	{
 		OtherEngine.BehaviourData bdata;
+
 		if (behaviourDict.TryGetValue(behaviour, out bdata))
 		{
 			bdata.routineList.AddLast(new OtherEngine.RoutineData(methodName, routine));
 		}
+
+		return new OtherEngine.Coroutine(bdata);
 	}
 
 	public static void RemoveRoutine(OtherEngine.MonoBehaviour behaviour, string methodName)
@@ -107,6 +107,8 @@ public class Main : MonoBehaviour
 
 	private void ProcessYieldInstruction(object instruction)
 	{
+		// コルーチンの戻り値を見て適切な処理を実行
+
 		if (instruction == null)
 		{
 			return;
@@ -114,7 +116,8 @@ public class Main : MonoBehaviour
 
 		if (instruction is Coroutine)
 		{
-
+			// ここで instruction を実行する必要がある。
+			// かつ、次のメインループで実行されるのは、instruction を辿った最後のコルーチン。
 		}
 		else if (instruction is YieldInstruction)
 		{
