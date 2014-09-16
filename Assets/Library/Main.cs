@@ -9,36 +9,36 @@ public class Main : MonoBehaviour
 	private int framerate;
 
 	// キーがnullになることがある、かつ登録した順序を保持したいので型はこうなる。
-	//private static List<RoutineData> routineList = new List<RoutineData>();
-	private static Dictionary<OtherEngine.MonoBehaviour, BehaviourData> behaviourDict = 
-		new Dictionary<OtherEngine.MonoBehaviour, BehaviourData>();
+	//private static List<OtherEngine.BehaviourData> routineList = new List<OtherEngine.BehaviourData>();
+	private static Dictionary<OtherEngine.MonoBehaviour, OtherEngine.BehaviourData> behaviourDict = 
+		new Dictionary<OtherEngine.MonoBehaviour, OtherEngine.BehaviourData>();
 
 	public static void AddMonoBehaviour(OtherEngine.MonoBehaviour behaviour)
 	{
 		if (!behaviourDict.ContainsKey(behaviour))
 		{
-			behaviourDict.Add(behaviour, new BehaviourData(behaviour));
+			behaviourDict.Add(behaviour, new OtherEngine.BehaviourData(behaviour));
 		}
 	}
 
 	public static void AddRoutine(OtherEngine.MonoBehaviour behaviour, string methodName, IEnumerator routine)
 	{
-		BehaviourData bdata;
+		OtherEngine.BehaviourData bdata;
 		if (behaviourDict.TryGetValue(behaviour, out bdata))
 		{
-			bdata.routineList.AddLast(new RoutineData(methodName, routine));
+			bdata.routineList.AddLast(new OtherEngine.RoutineData(methodName, routine));
 		}
 	}
 
 	public static void RemoveRoutine(OtherEngine.MonoBehaviour behaviour, string methodName)
 	{
-		BehaviourData bdata;
+		OtherEngine.BehaviourData bdata;
 		if (behaviourDict.TryGetValue(behaviour, out bdata))
 		{
-			LinkedListNode<RoutineData> node = bdata.routineList.First;
+			LinkedListNode<OtherEngine.RoutineData> node = bdata.routineList.First;
 			while (node != null)
 			{
-				RoutineData rdata = node.Value;
+				OtherEngine.RoutineData rdata = node.Value;
 
 				var oldNode = node;
 				node = node.Next;
@@ -52,7 +52,7 @@ public class Main : MonoBehaviour
 
 	public static void RemoveAllRoutines(OtherEngine.MonoBehaviour behaviour)
 	{
-		BehaviourData bdata;
+		OtherEngine.BehaviourData bdata;
 		if (behaviourDict.TryGetValue(behaviour, out bdata))
 		{
 			bdata.routineList.Clear();
@@ -67,7 +67,7 @@ public class Main : MonoBehaviour
 	public void Update()
 	{
 		// すべてのMonoBehaviourを実行
-		foreach (BehaviourData bdata in behaviourDict.Values)
+		foreach (OtherEngine.BehaviourData bdata in behaviourDict.Values)
 		{
 			if (bdata.mainloopBegan)
 			{
@@ -81,12 +81,12 @@ public class Main : MonoBehaviour
 		}
 
 		//コルーチンはUpdateの後
-		foreach (BehaviourData bdata in behaviourDict.Values)
+		foreach (OtherEngine.BehaviourData bdata in behaviourDict.Values)
 		{
-			LinkedListNode<RoutineData> node = bdata.routineList.First;
+			LinkedListNode<OtherEngine.RoutineData> node = bdata.routineList.First;
 			while (node != null)
 			{
-				RoutineData rdata = node.Value;
+				OtherEngine.RoutineData rdata = node.Value;
 				if (rdata.routine.MoveNext())
 				{
 					object current = rdata.routine.Current;
@@ -97,7 +97,7 @@ public class Main : MonoBehaviour
 				else
 				{
 					// 終わったコルーチンはリストから除外
-					LinkedListNode<RoutineData> toRemove = node;
+					LinkedListNode<OtherEngine.RoutineData> toRemove = node;
 					node = node.Next;
 					bdata.routineList.Remove(toRemove);
 				}
@@ -119,32 +119,6 @@ public class Main : MonoBehaviour
 		else if (instruction is YieldInstruction)
 		{
 			//WaitForSeconds
-		}
-	}
-
-	private class BehaviourData
-	{
-		public OtherEngine.MonoBehaviour behaviour;
-		public bool mainloopBegan;
-		public LinkedList<RoutineData> routineList;
-
-		public BehaviourData(OtherEngine.MonoBehaviour behaviour)
-		{
-			this.behaviour = behaviour;
-			this.mainloopBegan = false;
-			this.routineList = new LinkedList<RoutineData>();
-		}
-	}
-		
-	private class RoutineData
-	{
-		public string methodName;
-		public IEnumerator routine;
-
-		public RoutineData(string methodName, IEnumerator routine)
-		{
-			this.methodName = methodName;
-			this.routine = routine;
 		}
 	}
 }

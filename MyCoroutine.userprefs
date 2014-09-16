@@ -2,12 +2,13 @@
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Library/Main.cs">
     <Files>
-      <File FileName="Assets/Library/Main.cs" Line="68" Column="68" />
-      <File FileName="Assets/Scene/Test/Test.cs" Line="13" Column="13" />
-      <File FileName="Assets/Library/MonoBehaviour.cs" Line="14" Column="14" />
-      <File FileName="Assets/Library/Coroutine.cs" Line="1" Column="1" />
+      <File FileName="Assets/Library/Main.cs" Line="59" Column="59" />
+      <File FileName="Assets/Scene/Test/Test.cs" Line="8" Column="8" />
+      <File FileName="Assets/Library/MonoBehaviour.cs" Line="4" Column="4" />
+      <File FileName="Assets/Library/Coroutine.cs" Line="4" Column="4" />
       <File FileName="Assets/Library/YieldInstruction.cs" Line="1" Column="1" />
       <File FileName="Assets/Library/WaitForSeconds.cs" Line="1" Column="1" />
+      <File FileName="Assets/Library/RoutineData.cs" Line="22" Column="22" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
