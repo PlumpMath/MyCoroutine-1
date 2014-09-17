@@ -24,10 +24,30 @@ public class Main : MonoBehaviour
 
 		if (behaviourDict.TryGetValue(behaviour, out bdata))
 		{
+			// ここでコルーチンの初回実行。Currentが意味のない値を返すようになるまで再帰的に呼び出し続ける。
+			// なお、StartCoroutine() が呼ばれた時点でこのメソッドも再帰的に呼ばれるのに注意。
+
+			ProcessRoutine(routine);
+
 			bdata.routineList.AddLast(new OtherEngine.RoutineData(methodName, routine));
 		}
 
 		return new OtherEngine.Coroutine(bdata);
+	}
+
+	private static void ProcessRoutine(IEnumerator routine)
+	{
+		// 一回だけ実行
+		if (routine.MoveNext())
+		{
+			object current = routine.Current;
+			// ★とりあえずcurrentがCoroutineだった場合のみ考慮
+			if (current is OtherEngine.Coroutine)
+			{
+				// yield return StartCoroutine(routine)されている。
+				// ★routineListへの登録を削除する。
+			}
+		}
 	}
 
 	public static void RemoveRoutine(OtherEngine.MonoBehaviour behaviour, string methodName)
