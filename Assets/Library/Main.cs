@@ -6,7 +6,6 @@ using System.Threading;
 public class Main : MonoBehaviour
 {
 	// キーがnullになることがある、かつ登録した順序を保持したいので型はこうなる。
-	//private static List<OtherEngine.BehaviourData> routineList = new List<OtherEngine.BehaviourData>();
 	private static Dictionary<OtherEngine.MonoBehaviour, OtherEngine.BehaviourData> behaviourDict = 
 		new Dictionary<OtherEngine.MonoBehaviour, OtherEngine.BehaviourData>();
 
@@ -27,9 +26,13 @@ public class Main : MonoBehaviour
 			// ここでコルーチンの初回実行。Currentが意味のない値を返すようになるまで再帰的に呼び出し続ける。
 			// なお、StartCoroutine() が呼ばれた時点でこのメソッドも再帰的に呼ばれるのに注意。
 
-			ProcessRoutine(routine);
+			//ProcessRoutine(routine);
 
-			bdata.routineList.AddLast(new OtherEngine.RoutineData(methodName, routine));
+			//もしyield return されたコルーチンの場合は、そのyield returnが呼ばれたコルーチンのリストの最後にくっつける。
+			//そうではない場合、新たにリストを作ってroutineListの最後にくっつける。
+			var list = new LinkedList<OtherEngine.RoutineData>();
+			list.AddLast(new OtherEngine.RoutineData(methodName, routine));
+			bdata.routineList.AddLast(list);
 		}
 
 		return new OtherEngine.Coroutine(bdata);
@@ -41,11 +44,12 @@ public class Main : MonoBehaviour
 		if (routine.MoveNext())
 		{
 			object current = routine.Current;
-			// ★とりあえずcurrentがCoroutineだった場合のみ考慮
+			// ★TODO: とりあえずcurrentがCoroutineだった場合のみ考慮
 			if (current is OtherEngine.Coroutine)
 			{
-				// yield return StartCoroutine(routine)されている。
-				// ★routineListへの登録を削除する。
+				var instruction = (OtherEngine.Coroutine)current;
+				// ★TODO: instructionはコルーチンの戻り値として呼ばれたので、以降は呼び出し元のコルーチンから同期的に呼ばれる
+
 			}
 		}
 	}
@@ -55,17 +59,34 @@ public class Main : MonoBehaviour
 		OtherEngine.BehaviourData bdata;
 		if (behaviourDict.TryGetValue(behaviour, out bdata))
 		{
-			LinkedListNode<OtherEngine.RoutineData> node = bdata.routineList.First;
+			LinkedListNode<LinkedList<OtherEngine.RoutineData>> node = bdata.routineList.First;
 			while (node != null)
 			{
-				OtherEngine.RoutineData rdata = node.Value;
+				LinkedList<OtherEngine.RoutineData> list = node.Value;
+				RemoveRoutineSub(list, methodName);
 
 				var oldNode = node;
 				node = node.Next;
-				if (rdata.methodName == methodName)
+
+				// listの要素が空になった場合は、list自体を除去。
+				if (list.Count == 0)
 				{
 					bdata.routineList.Remove(oldNode);
 				}
+			}
+		}
+	}
+
+	private static void RemoveRoutineSub(LinkedList<OtherEngine.RoutineData> list, string methodName)
+	{
+		LinkedListNode<OtherEngine.RoutineData> node = list.First;
+		while (node != null)
+		{
+			var oldNode = node;
+			node = node.Next;
+			if (oldNode.Value.methodName == methodName)
+			{
+				list.Remove(oldNode);
 			}
 		}
 	}
@@ -89,38 +110,55 @@ public class Main : MonoBehaviour
 		// すべてのMonoBehaviourを実行
 		foreach (OtherEngine.BehaviourData bdata in behaviourDict.Values)
 		{
-			if (bdata.mainloopBegan)
-			{
-				bdata.behaviour.Update();
-			}
-			else
+			if (!bdata.mainloopBegan)
 			{
 				bdata.behaviour.Start();
 				bdata.mainloopBegan = true;
 			}
+
+			bdata.behaviour.Update();
 		}
 
-		//コルーチンはUpdateの後
+		// すべてのMonoBehaviourが持つコルーチンを実行。
+		// コルーチンは Update の後に呼ばれるので、ここで実行。
 		foreach (OtherEngine.BehaviourData bdata in behaviourDict.Values)
 		{
-			LinkedListNode<OtherEngine.RoutineData> node = bdata.routineList.First;
+			LinkedListNode<LinkedList<OtherEngine.RoutineData>> node = bdata.routineList.First;
 			while (node != null)
 			{
-				OtherEngine.RoutineData rdata = node.Value;
-				if (rdata.routine.MoveNext())
+				LinkedList<OtherEngine.RoutineData> list = node.Value;
+				ProcessCoroutine(list);
+
+				var oldNode = node;
+				node = node.Next;
+
+				if (list.Count == 0)
 				{
-					object current = rdata.routine.Current;
-					// ★ここがキモ
-					ProcessYieldInstruction(current);
-					node = node.Next;
+					bdata.routineList.Remove(oldNode);
 				}
-				else
-				{
-					// 終わったコルーチンはリストから除外
-					LinkedListNode<OtherEngine.RoutineData> toRemove = node;
-					node = node.Next;
-					bdata.routineList.Remove(toRemove);
-				}
+			}
+		}
+	}
+
+	private void ProcessCoroutine(LinkedList<OtherEngine.RoutineData> list)
+	{
+		LinkedListNode<OtherEngine.RoutineData> node = list.First;
+		while (node != null)
+		{
+			OtherEngine.RoutineData rdata = node.Value;
+			if (rdata.routine.MoveNext())
+			{
+				object current = rdata.routine.Current;
+				// ★ここがキモ
+				ProcessYieldInstruction(current);
+				node = node.Next;
+			}
+			else
+			{
+				// 終わったコルーチンはリストから除外
+				LinkedListNode<OtherEngine.RoutineData> toRemove = node;
+				node = node.Next;
+				list.Remove(toRemove);
 			}
 		}
 	}

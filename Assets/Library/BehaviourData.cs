@@ -7,13 +7,13 @@ namespace OtherEngine
 	{
 		public OtherEngine.MonoBehaviour behaviour;
 		public bool mainloopBegan;
-		public LinkedList<RoutineData> routineList;
+		public LinkedList<LinkedList<RoutineData>> routineList;
 
 		public BehaviourData(OtherEngine.MonoBehaviour behaviour)
 		{
 			this.behaviour = behaviour;
 			this.mainloopBegan = false;
-			this.routineList = new LinkedList<RoutineData>();
+			this.routineList = new LinkedList<LinkedList<RoutineData>>();
 		}
 	}
 }
