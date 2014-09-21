@@ -7,11 +7,13 @@ namespace OtherEngine
 	{
 		// ★このクラスのメンバやメソッドは、実際には internal で実装されることになると思う
 
-		public BehaviourData bdata;
+		public string methodName;
+		public IEnumerator routine;
 
-		public Coroutine(BehaviourData bdata)
+		public Coroutine(string methodName, IEnumerator routine)
 		{
-			this.bdata = bdata;
+			this.methodName = methodName;
+			this.routine = routine;
 		}
 	}
 }

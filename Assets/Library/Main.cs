@@ -30,12 +30,18 @@ public class Main : MonoBehaviour
 
 			//もしyield return されたコルーチンの場合は、そのyield returnが呼ばれたコルーチンのリストの最後にくっつける。
 			//そうではない場合、新たにリストを作ってroutineListの最後にくっつける。
-			var list = new LinkedList<OtherEngine.RoutineData>();
-			list.AddLast(new OtherEngine.RoutineData(methodName, routine));
+			var list = new LinkedList<OtherEngine.Coroutine>();
+			var coroutine = new OtherEngine.Coroutine(methodName, routine);
+			list.AddLast(coroutine);
 			bdata.routineList.AddLast(list);
+
+			return coroutine;
 		}
-		
-		return new OtherEngine.Coroutine(bdata);
+		else
+		{
+			// ここに来ることはない
+			return null;
+		}
 	}
 
 	private static void ProcessRoutine(IEnumerator routine)
@@ -59,10 +65,10 @@ public class Main : MonoBehaviour
 		OtherEngine.BehaviourData bdata;
 		if (behaviourDict.TryGetValue(behaviour, out bdata))
 		{
-			LinkedListNode<LinkedList<OtherEngine.RoutineData>> node = bdata.routineList.First;
+			LinkedListNode<LinkedList<OtherEngine.Coroutine>> node = bdata.routineList.First;
 			while (node != null)
 			{
-				LinkedList<OtherEngine.RoutineData> list = node.Value;
+				LinkedList<OtherEngine.Coroutine> list = node.Value;
 				RemoveRoutineSub(list, methodName);
 
 				var oldNode = node;
@@ -77,9 +83,9 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	private static void RemoveRoutineSub(LinkedList<OtherEngine.RoutineData> list, string methodName)
+	private static void RemoveRoutineSub(LinkedList<OtherEngine.Coroutine> list, string methodName)
 	{
-		LinkedListNode<OtherEngine.RoutineData> node = list.First;
+		LinkedListNode<OtherEngine.Coroutine> node = list.First;
 		while (node != null)
 		{
 			var oldNode = node;
@@ -123,10 +129,10 @@ public class Main : MonoBehaviour
 		// コルーチンは Update の後に呼ばれるので、ここで実行。
 		foreach (OtherEngine.BehaviourData bdata in behaviourDict.Values)
 		{
-			LinkedListNode<LinkedList<OtherEngine.RoutineData>> node = bdata.routineList.First;
+			LinkedListNode<LinkedList<OtherEngine.Coroutine>> node = bdata.routineList.First;
 			while (node != null)
 			{
-				LinkedList<OtherEngine.RoutineData> list = node.Value;
+				LinkedList<OtherEngine.Coroutine> list = node.Value;
 				ProcessCoroutine(list);
 
 				var oldNode = node;
@@ -140,12 +146,12 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	private void ProcessCoroutine(LinkedList<OtherEngine.RoutineData> list)
+	private void ProcessCoroutine(LinkedList<OtherEngine.Coroutine> list)
 	{
-		LinkedListNode<OtherEngine.RoutineData> node = list.First;
+		LinkedListNode<OtherEngine.Coroutine> node = list.First;
 		while (node != null)
 		{
-			OtherEngine.RoutineData rdata = node.Value;
+			OtherEngine.Coroutine rdata = node.Value;
 			if (rdata.routine.MoveNext())
 			{
 				object current = rdata.routine.Current;
@@ -156,7 +162,7 @@ public class Main : MonoBehaviour
 			else
 			{
 				// 終わったコルーチンはリストから除外
-				LinkedListNode<OtherEngine.RoutineData> toRemove = node;
+				LinkedListNode<OtherEngine.Coroutine> toRemove = node;
 				node = node.Next;
 				list.Remove(toRemove);
 			}
