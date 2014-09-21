@@ -61,18 +61,12 @@ public class Main : MonoBehaviour
 	/// <param name="coroutine">Coroutine.</param>
 	private static bool ProcessCoroutine(OtherEngine.Coroutine coroutine)
 	{
-		// beforeがnullである場合、現在のコンテキストがゲームのメインループであることを
-		// 意味するので、coroutineをMoveNext()させると必ずnullが返ってくる(yield return できないため)。
-		OtherEngine.Coroutine before = (currentRoutine.Count > 0) ?
-			currentRoutine.Peek() :
-			null;
-
 		currentRoutine.Push(coroutine);
 
 		bool executed = coroutine.routine.MoveNext();
 
 		// 一回だけ実行
-		if (executed && before != null)
+		if (executed)
 		{
 			object current = coroutine.routine.Current;
 
@@ -96,7 +90,7 @@ public class Main : MonoBehaviour
 					// nextが登録されているLinkedListからnextを削除。
 					next.node.List.Remove(next.node);
 					// beforeのリストに改めてnextを登録。
-					next.node = before.node.List.AddLast(next);
+					next.node = coroutine.node.List.AddLast(next);
 					// nextはコルーチンチェーンに組み込まれたので、フラグを立てる。
 					next.isChained = true;
 				}
@@ -156,7 +150,7 @@ public class Main : MonoBehaviour
 
 	public void Awake()
 	{
-		AddMonoBehaviour(new Test());
+		AddMonoBehaviour(new Test2());
 	}
 
 	public void Update()
