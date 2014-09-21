@@ -23,15 +23,18 @@ public class Main : MonoBehaviour
 
 		if (behaviourDict.TryGetValue(behaviour, out bdata))
 		{
-			// ここでコルーチンの初回実行。Currentが意味のない値を返すようになるまで再帰的に呼び出し続ける。
+			var coroutine = new OtherEngine.Coroutine(methodName, routine);
+
+			// 登録前にコルーチンの初回実行を行う。
 			// なお、StartCoroutine() が呼ばれた時点でこのメソッドも再帰的に呼ばれるのに注意。
 
-			//ProcessRoutine(routine);
+			// 自分自身が実行されているチェーン(LinkedList<Coroutine>)を渡す必要がある。
+			// ★そのためには、現在実行されているルーチンがどこに所属するのかを判別する必要がある。
+			//ProcessRoutine(bdata.routineList, coroutine);
 
 			//もしyield return されたコルーチンの場合は、そのyield returnが呼ばれたコルーチンのリストの最後にくっつける。
 			//そうではない場合、新たにリストを作ってroutineListの最後にくっつける。
 			var list = new LinkedList<OtherEngine.Coroutine>();
-			var coroutine = new OtherEngine.Coroutine(methodName, routine);
 			list.AddLast(coroutine);
 			bdata.routineList.AddLast(list);
 
@@ -53,8 +56,9 @@ public class Main : MonoBehaviour
 			// ★TODO: とりあえずcurrentがCoroutineだった場合のみ考慮
 			if (current is OtherEngine.Coroutine)
 			{
-				var instruction = (OtherEngine.Coroutine)current;
-				// ★TODO: instructionはコルーチンの戻り値として呼ばれたので、以降は呼び出し元のコルーチンから同期的に呼ばれる
+				var coroutine = (OtherEngine.Coroutine)current;
+				// coroutineが yield return の戻り値として呼び出されたので、
+				// このcoroutine をコルーチンの実行リストから外して、コルーチンチェーンに組み込む。
 
 			}
 		}
