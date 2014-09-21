@@ -40,7 +40,7 @@ namespace OtherEngine
 			return Main.AddRoutine(this, methodName, routine);
 		}
 
-		public void StopCorutine(string methodName)
+		public void StopCoroutine(string methodName)
 		{
 			Main.RemoveRoutine(this, methodName);
 		}

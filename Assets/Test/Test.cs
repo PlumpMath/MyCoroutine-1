@@ -15,10 +15,13 @@ public class Test : MonoBehaviour
 	public override void Update()
 	{
 		++count;
+
+		UnityEngine.Debug.Log("    Update:" + count);
+
 		if (count == 50)
 		{
 			//StopAllCoroutines();
-			StopCorutine("RoutineTest");
+			StopCoroutine("RoutineTest");
 		}
 	}
 
