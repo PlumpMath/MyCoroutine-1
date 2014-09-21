@@ -9,6 +9,11 @@ public class Main : MonoBehaviour
 	private static Dictionary<OtherEngine.MonoBehaviour, OtherEngine.BehaviourData> behaviourDict = 
 		new Dictionary<OtherEngine.MonoBehaviour, OtherEngine.BehaviourData>();
 
+	/// <summary>
+	/// 現在実行されているCoroutine。
+	/// </summary>
+	private static Stack<OtherEngine.Coroutine> currentRoutine = new Stack<OtherEngine.Coroutine>();
+
 	public static void AddMonoBehaviour(OtherEngine.MonoBehaviour behaviour)
 	{
 		if (!behaviourDict.ContainsKey(behaviour))
@@ -17,6 +22,13 @@ public class Main : MonoBehaviour
 		}
 	}
 
+	/// <summary>
+	/// このメソッドの実行中に StartCoroutine() が呼ばれると再入するので注意。
+	/// </summary>
+	/// <returns>The routine.</returns>
+	/// <param name="behaviour">Behaviour.</param>
+	/// <param name="methodName">Method name.</param>
+	/// <param name="routine">Routine.</param>
 	public static OtherEngine.Coroutine AddRoutine(OtherEngine.MonoBehaviour behaviour, string methodName, IEnumerator routine)
 	{
 		OtherEngine.BehaviourData bdata;
@@ -25,18 +37,13 @@ public class Main : MonoBehaviour
 		{
 			var coroutine = new OtherEngine.Coroutine(methodName, routine);
 
-			// 登録前にコルーチンの初回実行を行う。
-			// なお、StartCoroutine() が呼ばれた時点でこのメソッドも再帰的に呼ばれるのに注意。
-
-			// 自分自身が実行されているチェーン(LinkedList<Coroutine>)を渡す必要がある。
-			// ★そのためには、現在実行されているルーチンがどこに所属するのかを判別する必要がある。
-			//ProcessRoutine(bdata.routineList, coroutine);
-
-			//もしyield return されたコルーチンの場合は、そのyield returnが呼ばれたコルーチンのリストの最後にくっつける。
-			//そうではない場合、新たにリストを作ってroutineListの最後にくっつける。
+			// 何はともあれまずコルーチンを登録
 			var list = new LinkedList<OtherEngine.Coroutine>();
-			list.AddLast(coroutine);
+			coroutine.node = list.AddLast(coroutine);
 			bdata.routineList.AddLast(list);
+
+			// コルーチンの初回実行を行う。
+			ProcessCoroutine(coroutine);
 
 			return coroutine;
 		}
@@ -47,21 +54,58 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	private static void ProcessRoutine(IEnumerator routine)
+	/// <summary>
+	/// コルーチンの実行。コルーチンが既に終了していたらfalseを返す。
+	/// </summary>
+	/// <param name="routineList">Routine list.</param>
+	/// <param name="coroutine">Coroutine.</param>
+	private static bool ProcessCoroutine(OtherEngine.Coroutine coroutine)
 	{
+		// beforeがnullである場合、現在のコンテキストがゲームのメインループであることを
+		// 意味するので、coroutineをMoveNext()させると必ずnullが返ってくる(yield return できないため)。
+		OtherEngine.Coroutine before = (currentRoutine.Count > 0) ?
+			currentRoutine.Peek() :
+			null;
+
+		currentRoutine.Push(coroutine);
+
+		bool executed = coroutine.routine.MoveNext();
+
 		// 一回だけ実行
-		if (routine.MoveNext())
+		if (executed && before != null)
 		{
-			object current = routine.Current;
+			object current = coroutine.routine.Current;
+
 			// ★TODO: とりあえずcurrentがCoroutineだった場合のみ考慮
+			// 将来的にはYieldInstructionにも対応する必要あり。
+
+			// current は yield return の戻り値である。
 			if (current is OtherEngine.Coroutine)
 			{
-				var coroutine = (OtherEngine.Coroutine)current;
-				// coroutineが yield return の戻り値として呼び出されたので、
-				// このcoroutine をコルーチンの実行リストから外して、コルーチンチェーンに組み込む。
+				var next = (OtherEngine.Coroutine)current;
 
+				// next をbeforeの後ろにくっつける。
+				// ただし、next が既に別のコルーチンチェーンに組み込まれていた場合、
+				// ログを出すだけで何もしない。
+				if (next.isChained)
+				{
+					UnityEngine.Debug.Log("[エラー] 1つのコルーチンで2つ以上のコルーチンを待機させる事はできません。");
+				}
+				else
+				{
+					// nextが登録されているLinkedListからnextを削除。
+					next.node.List.Remove(next.node);
+					// beforeのリストに改めてnextを登録。
+					next.node = before.node.List.AddLast(next);
+					// nextはコルーチンチェーンに組み込まれたので、フラグを立てる。
+					next.isChained = true;
+				}
 			}
 		}
+
+		currentRoutine.Pop();
+
+		return executed;
 	}
 
 	public static void RemoveRoutine(OtherEngine.MonoBehaviour behaviour, string methodName)
@@ -136,13 +180,14 @@ public class Main : MonoBehaviour
 			LinkedListNode<LinkedList<OtherEngine.Coroutine>> node = bdata.routineList.First;
 			while (node != null)
 			{
-				LinkedList<OtherEngine.Coroutine> list = node.Value;
-				ProcessCoroutine(list);
+				LinkedList<OtherEngine.Coroutine> coroutineChain = node.Value;
+				ProcessChainedCoroutine(coroutineChain);
 
 				var oldNode = node;
 				node = node.Next;
 
-				if (list.Count == 0)
+				// コルーチンチェーンが空になったら、チェーンの入れ物自体を破棄。
+				if (coroutineChain.Count == 0)
 				{
 					bdata.routineList.Remove(oldNode);
 				}
@@ -150,17 +195,18 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	private void ProcessCoroutine(LinkedList<OtherEngine.Coroutine> list)
+	private void ProcessChainedCoroutine(LinkedList<OtherEngine.Coroutine> chain)
 	{
-		LinkedListNode<OtherEngine.Coroutine> node = list.First;
-		while (node != null)
+		// chainの末尾を実行。
+		// 実行完了していたら、chainから削除。
+
+		LinkedListNode<OtherEngine.Coroutine> node = chain.Last;
+		if (node != null)
 		{
-			OtherEngine.Coroutine rdata = node.Value;
-			if (rdata.routine.MoveNext())
+			OtherEngine.Coroutine coroutine = node.Value;
+
+			if (ProcessCoroutine(coroutine))
 			{
-				object current = rdata.routine.Current;
-				// ★ここがキモ
-				ProcessYieldInstruction(current);
 				node = node.Next;
 			}
 			else
@@ -168,28 +214,8 @@ public class Main : MonoBehaviour
 				// 終わったコルーチンはリストから除外
 				LinkedListNode<OtherEngine.Coroutine> toRemove = node;
 				node = node.Next;
-				list.Remove(toRemove);
+				chain.Remove(toRemove);
 			}
-		}
-	}
-
-	private void ProcessYieldInstruction(object instruction)
-	{
-		// コルーチンの戻り値を見て適切な処理を実行
-
-		if (instruction == null)
-		{
-			return;
-		}
-
-		if (instruction is Coroutine)
-		{
-			// ここで instruction を実行する必要がある。
-			// かつ、次のメインループで実行されるのは、instruction を辿った最後のコルーチン。
-		}
-		else if (instruction is YieldInstruction)
-		{
-			//WaitForSeconds
 		}
 	}
 }
