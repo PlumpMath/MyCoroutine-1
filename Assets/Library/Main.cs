@@ -6,19 +6,19 @@ using System.Threading;
 public class Main : MonoBehaviour
 {
 	// キーがnullになることがある、かつ登録した順序を保持したいので型はこうなる。
-	private static Dictionary<OtherEngine.MonoBehaviour, OtherEngine.BehaviourData> behaviourDict = 
-		new Dictionary<OtherEngine.MonoBehaviour, OtherEngine.BehaviourData>();
+	private static Dictionary<MyLib.MonoBehaviour, MyLib.BehaviourData> behaviourDict = 
+		new Dictionary<MyLib.MonoBehaviour, MyLib.BehaviourData>();
 
 	/// <summary>
 	/// 現在実行されているCoroutine。
 	/// </summary>
-	private static Stack<OtherEngine.Coroutine> currentRoutine = new Stack<OtherEngine.Coroutine>();
+	private static Stack<MyLib.Coroutine> currentRoutine = new Stack<MyLib.Coroutine>();
 
-	public static void AddMonoBehaviour(OtherEngine.MonoBehaviour behaviour)
+	public static void AddMonoBehaviour(MyLib.MonoBehaviour behaviour)
 	{
 		if (!behaviourDict.ContainsKey(behaviour))
 		{
-			behaviourDict.Add(behaviour, new OtherEngine.BehaviourData(behaviour));
+			behaviourDict.Add(behaviour, new MyLib.BehaviourData(behaviour));
 		}
 	}
 
@@ -29,16 +29,16 @@ public class Main : MonoBehaviour
 	/// <param name="behaviour">Behaviour.</param>
 	/// <param name="methodName">Method name.</param>
 	/// <param name="routine">Routine.</param>
-	public static OtherEngine.Coroutine AddRoutine(OtherEngine.MonoBehaviour behaviour, string methodName, IEnumerator routine)
+	public static MyLib.Coroutine AddRoutine(MyLib.MonoBehaviour behaviour, string methodName, IEnumerator routine)
 	{
-		OtherEngine.BehaviourData bdata;
+		MyLib.BehaviourData bdata;
 
 		if (behaviourDict.TryGetValue(behaviour, out bdata))
 		{
-			var coroutine = new OtherEngine.Coroutine(methodName, routine);
+			var coroutine = new MyLib.Coroutine(methodName, routine);
 
 			// 何はともあれまずコルーチンを登録
-			var list = new LinkedList<OtherEngine.Coroutine>();
+			var list = new LinkedList<MyLib.Coroutine>();
 			coroutine.node = list.AddLast(coroutine);
 			bdata.routineList.AddLast(list);
 
@@ -59,7 +59,7 @@ public class Main : MonoBehaviour
 	/// </summary>
 	/// <param name="routineList">Routine list.</param>
 	/// <param name="coroutine">Coroutine.</param>
-	private static bool ProcessCoroutine(OtherEngine.Coroutine coroutine)
+	private static bool ProcessCoroutine(MyLib.Coroutine coroutine)
 	{
 		currentRoutine.Push(coroutine);
 
@@ -74,9 +74,9 @@ public class Main : MonoBehaviour
 			// 将来的にはYieldInstructionにも対応する必要あり。
 
 			// current は yield return の戻り値である。
-			if (current is OtherEngine.Coroutine)
+			if (current is MyLib.Coroutine)
 			{
-				var next = (OtherEngine.Coroutine)current;
+				var next = (MyLib.Coroutine)current;
 
 				// next をbeforeの後ろにくっつける。
 				// ただし、next が既に別のコルーチンチェーンに組み込まれていた場合、
@@ -102,15 +102,15 @@ public class Main : MonoBehaviour
 		return executed;
 	}
 
-	public static void RemoveRoutine(OtherEngine.MonoBehaviour behaviour, string methodName)
+	public static void RemoveRoutine(MyLib.MonoBehaviour behaviour, string methodName)
 	{
-		OtherEngine.BehaviourData bdata;
+		MyLib.BehaviourData bdata;
 		if (behaviourDict.TryGetValue(behaviour, out bdata))
 		{
-			LinkedListNode<LinkedList<OtherEngine.Coroutine>> node = bdata.routineList.First;
+			LinkedListNode<LinkedList<MyLib.Coroutine>> node = bdata.routineList.First;
 			while (node != null)
 			{
-				LinkedList<OtherEngine.Coroutine> list = node.Value;
+				LinkedList<MyLib.Coroutine> list = node.Value;
 				RemoveRoutineSub(list, methodName);
 
 				var oldNode = node;
@@ -125,9 +125,9 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	private static void RemoveRoutineSub(LinkedList<OtherEngine.Coroutine> list, string methodName)
+	private static void RemoveRoutineSub(LinkedList<MyLib.Coroutine> list, string methodName)
 	{
-		LinkedListNode<OtherEngine.Coroutine> node = list.First;
+		LinkedListNode<MyLib.Coroutine> node = list.First;
 		while (node != null)
 		{
 			var oldNode = node;
@@ -139,9 +139,9 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	public static void RemoveAllRoutines(OtherEngine.MonoBehaviour behaviour)
+	public static void RemoveAllRoutines(MyLib.MonoBehaviour behaviour)
 	{
-		OtherEngine.BehaviourData bdata;
+		MyLib.BehaviourData bdata;
 		if (behaviourDict.TryGetValue(behaviour, out bdata))
 		{
 			bdata.routineList.Clear();
@@ -150,13 +150,13 @@ public class Main : MonoBehaviour
 
 	public void Awake()
 	{
-		AddMonoBehaviour(new Test2());
+		AddMonoBehaviour(new Test());
 	}
 
 	public void Update()
 	{
 		// すべてのMonoBehaviourを実行
-		foreach (OtherEngine.BehaviourData bdata in behaviourDict.Values)
+		foreach (MyLib.BehaviourData bdata in behaviourDict.Values)
 		{
 			if (!bdata.mainloopBegan)
 			{
@@ -169,12 +169,12 @@ public class Main : MonoBehaviour
 
 		// すべてのMonoBehaviourが持つコルーチンを実行。
 		// コルーチンは Update の後に呼ばれるので、ここで実行。
-		foreach (OtherEngine.BehaviourData bdata in behaviourDict.Values)
+		foreach (MyLib.BehaviourData bdata in behaviourDict.Values)
 		{
-			LinkedListNode<LinkedList<OtherEngine.Coroutine>> node = bdata.routineList.First;
+			LinkedListNode<LinkedList<MyLib.Coroutine>> node = bdata.routineList.First;
 			while (node != null)
 			{
-				LinkedList<OtherEngine.Coroutine> coroutineChain = node.Value;
+				LinkedList<MyLib.Coroutine> coroutineChain = node.Value;
 				ProcessChainedCoroutine(coroutineChain);
 
 				var oldNode = node;
@@ -189,15 +189,15 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	private void ProcessChainedCoroutine(LinkedList<OtherEngine.Coroutine> chain)
+	private void ProcessChainedCoroutine(LinkedList<MyLib.Coroutine> chain)
 	{
 		// chainの末尾を実行。
 		// 実行完了していたら、chainから削除。
 
-		LinkedListNode<OtherEngine.Coroutine> node = chain.Last;
+		LinkedListNode<MyLib.Coroutine> node = chain.Last;
 		if (node != null)
 		{
-			OtherEngine.Coroutine coroutine = node.Value;
+			MyLib.Coroutine coroutine = node.Value;
 
 			if (ProcessCoroutine(coroutine))
 			{
@@ -206,7 +206,7 @@ public class Main : MonoBehaviour
 			else
 			{
 				// 終わったコルーチンはリストから除外
-				LinkedListNode<OtherEngine.Coroutine> toRemove = node;
+				LinkedListNode<MyLib.Coroutine> toRemove = node;
 				node = node.Next;
 				chain.Remove(toRemove);
 			}

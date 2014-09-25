@@ -1,15 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace OtherEngine
+namespace MyLib
 {
 	public class BehaviourData
 	{
-		public OtherEngine.MonoBehaviour behaviour;
+		public MyLib.MonoBehaviour behaviour;
 		public bool mainloopBegan;
 		public LinkedList<LinkedList<Coroutine>> routineList;
 
-		public BehaviourData(OtherEngine.MonoBehaviour behaviour)
+		public BehaviourData(MyLib.MonoBehaviour behaviour)
 		{
 			this.behaviour = behaviour;
 			this.mainloopBegan = false;

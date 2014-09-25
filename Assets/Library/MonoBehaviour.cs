@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Reflection;
 
-namespace OtherEngine
+namespace MyLib
 {
 	public class MonoBehaviour
 	{

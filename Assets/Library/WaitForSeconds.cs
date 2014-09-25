@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace OtherEngine
+namespace MyLib
 {
 	public class WaitForSeconds : YieldInstruction
 	{

@@ -1,4 +1,4 @@
-﻿using OtherEngine;
+﻿using MyLib;
 using System.Collections;
 
 public class Test2 : MonoBehaviour {

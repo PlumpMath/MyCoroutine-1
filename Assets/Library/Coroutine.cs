@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace OtherEngine
+namespace MyLib
 {
 	public class Coroutine : YieldInstruction
 	{
